@@ -1,0 +1,41 @@
+[project]
+name = "enterprise-rag"
+version = "0.1.0"
+description = "Enterprise knowledge-base RAG scaffold with LangGraph orchestration."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "langgraph",
+    "langchain-core",
+    "pydantic",
+    "pydantic-settings",
+    "python-multipart",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx",
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+prod-connectors = [
+    "pymilvus",
+    "opensearch-py",
+    "psycopg[binary]",
+    "redis",
+    "celery",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
