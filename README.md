@@ -137,6 +137,23 @@ pip install \
   ruff
 ```
 
+如果要启用 DeepSeek 真实生成模型，再安装：
+
+```bash
+pip install langchain-deepseek
+```
+
+在项目根目录创建 `.env`，填写：
+
+```env
+RAG_LLM_PROVIDER=deepseek
+RAG_DEEPSEEK_API_BASE=https://api.deepseek.com
+RAG_DEEPSEEK_API_KEY=你的 DeepSeek Key
+RAG_DEEPSEEK_MODEL=deepseek-v4-flash
+```
+
+如果 `RAG_DEEPSEEK_API_KEY` 为空，系统会自动使用本地假模型 `GroundedStubChatModel`。
+
 启动服务：
 
 ```bash

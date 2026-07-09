@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn[standard]",
     "langgraph",
     "langchain-core",
+    "langchain-deepseek",
     "pydantic",
     "pydantic-settings",
     "python-multipart",

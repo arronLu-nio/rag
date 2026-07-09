@@ -1,5 +1,6 @@
 from httpx import ASGITransport, AsyncClient
 
+from app.adapters.in_memory import GroundedStubChatModel
 from app.main import app
 
 
@@ -13,7 +14,10 @@ async def test_health_endpoint():
     assert response.json()["status"] == "ok"
 
 
-async def test_ingest_then_ask_endpoint():
+async def test_ingest_then_ask_endpoint(monkeypatch):
+    monkeypatch.setattr("app.main.settings.llm_provider", "stub")
+    monkeypatch.setattr("app.main.settings.deepseek_api_key", "")
+
     async with app.router.lifespan_context(app):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -44,3 +48,12 @@ async def test_ingest_then_ask_endpoint():
     answer = ask_response.json()
     assert answer["citations"]
     assert answer["trace"]["used_model"] == "grounded-stub-model"
+
+
+def test_empty_deepseek_key_falls_back_to_stub(monkeypatch):
+    monkeypatch.setattr("app.main.settings.llm_provider", "deepseek")
+    monkeypatch.setattr("app.main.settings.deepseek_api_key", "")
+
+    from app.main import build_chat_model
+
+    assert isinstance(build_chat_model(), GroundedStubChatModel)

@@ -12,6 +12,7 @@ from app.adapters.in_memory import (
     SimpleReranker,
 )
 from app.domain import ACL, Document, QAAnswer
+from app.ports.contracts import ChatModel
 from app.settings import settings
 from app.workflows import build_indexing_graph, build_qa_graph
 
@@ -27,7 +28,7 @@ class AppState:
         self.embedding_model = HashEmbeddingModel()
         self.retriever = HybridInMemoryRetriever(self.store, self.embedding_model)
         self.reranker = SimpleReranker()
-        self.chat_model = GroundedStubChatModel()
+        self.chat_model = build_chat_model()
         self.indexing_graph = build_indexing_graph(self.store, self.embedding_model)
         self.qa_graph = build_qa_graph(self.retriever, self.reranker, self.chat_model)
 
@@ -39,6 +40,23 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+
+def build_chat_model() -> ChatModel:
+    """按配置选择生成模型。
+
+    本地没有填写 DeepSeek key 时，自动回退到假模型，避免服务启动失败。
+    """
+
+    if settings.llm_provider.lower() == "deepseek" and settings.deepseek_api_key:
+        from app.adapters.deepseek import DeepSeekChatModel
+
+        return DeepSeekChatModel(
+            api_key=settings.deepseek_api_key,
+            api_base=settings.deepseek_api_base,
+            model=settings.deepseek_model,
+        )
+    return GroundedStubChatModel()
 
 
 def get_state() -> AppState:
