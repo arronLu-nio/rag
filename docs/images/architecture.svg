@@ -1,0 +1,101 @@
+<svg width="1180" height="760" viewBox="0 0 1180 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1180" height="760" rx="28" fill="#F7FAFC"/>
+  <rect x="36" y="32" width="1108" height="696" rx="24" fill="white" stroke="#D8E2EE" stroke-width="2"/>
+
+  <text x="590" y="82" text-anchor="middle" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="34" font-weight="700" fill="#102A43">企业知识库 RAG 架构</text>
+  <text x="590" y="118" text-anchor="middle" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#486581">LangGraph 编排流程，LangChain 作为模型与工具集成层</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2 2L10 6L2 10V2Z" fill="#486581"/>
+    </marker>
+    <style>
+      .box { fill: #F0F6FF; stroke: #84A9D9; stroke-width: 2; }
+      .store { fill: #F7F3FF; stroke: #B59BE8; stroke-width: 2; }
+      .api { fill: #EAFBF1; stroke: #68B984; stroke-width: 2; }
+      .model { fill: #FFF7E6; stroke: #F0B35E; stroke-width: 2; }
+      .title { font: 700 18px Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; fill: #102A43; }
+      .small { font: 14px Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; fill: #334E68; }
+      .tiny { font: 12px Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; fill: #627D98; }
+      .lane { fill: #FBFDFF; stroke: #D8E2EE; stroke-width: 1.5; }
+      .arrow { stroke: #486581; stroke-width: 2.2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="72" y="154" width="486" height="498" rx="18" class="lane"/>
+  <text x="315" y="188" text-anchor="middle" class="title">文档入库链路</text>
+
+  <rect x="112" y="222" width="180" height="72" rx="14" class="box"/>
+  <text x="202" y="252" text-anchor="middle" class="title">企业文档</text>
+  <text x="202" y="276" text-anchor="middle" class="small">PDF / Word / 网页</text>
+
+  <rect x="338" y="222" width="180" height="72" rx="14" class="api"/>
+  <text x="428" y="252" text-anchor="middle" class="title">FastAPI</text>
+  <text x="428" y="276" text-anchor="middle" class="small">上传与入库接口</text>
+
+  <line x1="292" y1="258" x2="334" y2="258" class="arrow"/>
+
+  <rect x="142" y="340" width="346" height="174" rx="16" class="box"/>
+  <text x="315" y="374" text-anchor="middle" class="title">LangGraph 索引工作流</text>
+  <text x="315" y="410" text-anchor="middle" class="small">receive → parse → chunk</text>
+  <text x="315" y="438" text-anchor="middle" class="small">embed → persist indexes → publish</text>
+  <text x="315" y="480" text-anchor="middle" class="tiny">失败重试、状态追踪、版本发布</text>
+
+  <line x1="428" y1="294" x2="428" y2="336" class="arrow"/>
+
+  <rect x="96" y="562" width="128" height="58" rx="13" class="store"/>
+  <text x="160" y="588" text-anchor="middle" class="small">对象存储</text>
+  <text x="160" y="608" text-anchor="middle" class="tiny">原始文件</text>
+
+  <rect x="252" y="562" width="128" height="58" rx="13" class="store"/>
+  <text x="316" y="588" text-anchor="middle" class="small">PostgreSQL</text>
+  <text x="316" y="608" text-anchor="middle" class="tiny">元数据 / ACL</text>
+
+  <rect x="408" y="562" width="128" height="58" rx="13" class="store"/>
+  <text x="472" y="588" text-anchor="middle" class="small">Milvus</text>
+  <text x="472" y="608" text-anchor="middle" class="tiny">向量索引</text>
+
+  <line x1="250" y1="514" x2="180" y2="558" class="arrow"/>
+  <line x1="315" y1="514" x2="315" y2="558" class="arrow"/>
+  <line x1="380" y1="514" x2="452" y2="558" class="arrow"/>
+
+  <rect x="622" y="154" width="486" height="498" rx="18" class="lane"/>
+  <text x="865" y="188" text-anchor="middle" class="title">问答检索链路</text>
+
+  <rect x="662" y="222" width="180" height="72" rx="14" class="box"/>
+  <text x="752" y="252" text-anchor="middle" class="title">用户问题</text>
+  <text x="752" y="276" text-anchor="middle" class="small">带租户与身份信息</text>
+
+  <rect x="888" y="222" width="180" height="72" rx="14" class="api"/>
+  <text x="978" y="252" text-anchor="middle" class="title">问答 API</text>
+  <text x="978" y="276" text-anchor="middle" class="small">/qa/ask</text>
+
+  <line x1="842" y1="258" x2="884" y2="258" class="arrow"/>
+
+  <rect x="692" y="340" width="346" height="174" rx="16" class="box"/>
+  <text x="865" y="374" text-anchor="middle" class="title">LangGraph 问答工作流</text>
+  <text x="865" y="410" text-anchor="middle" class="small">permission → rewrite → retrieve</text>
+  <text x="865" y="438" text-anchor="middle" class="small">rerank → generate → trace</text>
+  <text x="865" y="480" text-anchor="middle" class="tiny">权限先过滤，有依据才回答</text>
+
+  <line x1="978" y1="294" x2="978" y2="336" class="arrow"/>
+
+  <rect x="646" y="562" width="128" height="58" rx="13" class="store"/>
+  <text x="710" y="588" text-anchor="middle" class="small">OpenSearch</text>
+  <text x="710" y="608" text-anchor="middle" class="tiny">关键词检索</text>
+
+  <rect x="802" y="562" width="128" height="58" rx="13" class="model"/>
+  <text x="866" y="588" text-anchor="middle" class="small">Reranker</text>
+  <text x="866" y="608" text-anchor="middle" class="tiny">重排候选</text>
+
+  <rect x="958" y="562" width="128" height="58" rx="13" class="model"/>
+  <text x="1022" y="588" text-anchor="middle" class="small">LLM</text>
+  <text x="1022" y="608" text-anchor="middle" class="tiny">生成答案</text>
+
+  <line x1="800" y1="514" x2="730" y2="558" class="arrow"/>
+  <line x1="865" y1="514" x2="865" y2="558" class="arrow"/>
+  <line x1="930" y1="514" x2="1002" y2="558" class="arrow"/>
+
+  <rect x="391" y="670" width="398" height="38" rx="19" fill="#102A43"/>
+  <text x="590" y="695" text-anchor="middle" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="white">输出：答案 + 引用来源 + 置信度 + 审计 Trace</text>
+</svg>
