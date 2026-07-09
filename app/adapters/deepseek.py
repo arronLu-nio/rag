@@ -1,10 +1,10 @@
 import logging
 
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_deepseek import ChatDeepSeek
 
 from app.domain import AnswerTrace, Citation, QAAnswer, RetrievalResult
 from app.ports.contracts import ChatModel
+from app.prompts.qa import build_qa_messages
 
 logger = logging.getLogger(__name__)
 
@@ -53,29 +53,8 @@ class DeepSeekChatModel(ChatModel):
             )
             for result in top_contexts
         ]
-        context_text = "\n\n".join(
-            f"[{index}] 来源：{result.chunk.title}\n{result.chunk.text}"
-            for index, result in enumerate(top_contexts, start=1)
-        )
-        logger.info("=============%s=============", self.name)
-        response = await self.client.ainvoke(
-            [
-                SystemMessage(
-                    content=(
-                        "你是企业知识库问答助手。只能依据用户有权限访问的上下文回答。"
-                        "如果上下文不足以回答，就明确说未找到可靠依据。"
-                        "回答要简洁，并尽量指出依据来自哪些上下文编号。"
-                    )
-                ),
-                HumanMessage(
-                    content=(
-                        f"问题：{query}\n\n"
-                        f"已授权上下文：\n{context_text}\n\n"
-                        "请基于以上上下文回答。"
-                    )
-                ),
-            ]
-        )
+        print(f"============={self.name}=============") 
+        response = await self.client.ainvoke(build_qa_messages(query, top_contexts))
         return QAAnswer(
             answer=str(response.content),
             citations=citations,
