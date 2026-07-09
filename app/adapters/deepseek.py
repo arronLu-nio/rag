@@ -1,8 +1,12 @@
+import logging
+
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_deepseek import ChatDeepSeek
 
 from app.domain import AnswerTrace, Citation, QAAnswer, RetrievalResult
 from app.ports.contracts import ChatModel
+
+logger = logging.getLogger(__name__)
 
 
 class DeepSeekChatModel(ChatModel):
@@ -53,6 +57,7 @@ class DeepSeekChatModel(ChatModel):
             f"[{index}] 来源：{result.chunk.title}\n{result.chunk.text}"
             for index, result in enumerate(top_contexts, start=1)
         )
+        logger.info("=============%s=============", self.name)
         response = await self.client.ainvoke(
             [
                 SystemMessage(
