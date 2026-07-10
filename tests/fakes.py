@@ -4,14 +4,14 @@ import math
 from collections import Counter
 
 from app.domain import Chunk, Document, RetrievalResult
-from app.ports.contracts import DocumentStore, EmbeddingModel, Retriever
+from app.ports.contracts import EmbeddingModel, IndexStore, Retriever
 
 
 def _tokens(text: str) -> list[str]:
     return [char.lower() for char in text if not char.isspace()]
 
 
-class FakeDocumentStore(DocumentStore):
+class FakeDocumentStore(IndexStore):
     def __init__(self) -> None:
         self.documents: dict[str, Document] = {}
         self.chunks: dict[str, Chunk] = {}
@@ -92,5 +92,12 @@ class FakeRetriever(Retriever):
             chunk_terms = Counter(_tokens(chunk.text))
             score = sum(min(count, chunk_terms[token]) for token, count in query_terms.items())
             if score:
-                results.append(RetrievalResult(chunk=chunk, score=float(score), source="test-fake"))
+                results.append(
+                    RetrievalResult(
+                        chunk=chunk,
+                        score=float(score),
+                        source="test-fake",
+                        vector_score=float(score),
+                    )
+                )
         return sorted(results, key=lambda item: item.score, reverse=True)[:top_k]

@@ -101,4 +101,5 @@ async def test_hybrid_retriever_deduplicates_with_rrf():
 
     assert [item.chunk.id for item in results] == ["vpn", "leave", "faq"]
     assert results[0].source == "hybrid-rrf"
+    assert results[0].vector_score == 0.6
     assert results[0].score > results[1].score

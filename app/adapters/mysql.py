@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.schema import Column
 
 from app.domain import ACL, Chunk, Document, DocumentStatus
-from app.ports.contracts import DocumentStore
+from app.ports.contracts import ChunkStore, DocumentStore, IndexStore
 
 metadata = MetaData()
 documents = Table(
@@ -92,11 +92,6 @@ class MySQLDocumentStore(DocumentStore):
             await connection.execute(statement.on_duplicate_key_update(**update_values))
         return document
 
-    async def save_chunks(self, chunks: list[Chunk]) -> None:
-        """Chunk 由 CompositeDocumentStore 转交给 Milvus，此处不应被直接调用。"""
-
-        raise RuntimeError("MySQLDocumentStore does not store chunks; use CompositeDocumentStore")
-
     async def get_document(self, document_id: str) -> Document | None:
         await self.initialize()
         async with self._engine.connect() as connection:
@@ -120,12 +115,6 @@ class MySQLDocumentStore(DocumentStore):
             )
             rows = result.mappings().all()
         return [self._document_from_row(row) for row in rows]
-
-    async def replace_chunks(self, document_id: str, chunks: list[Chunk]) -> None:
-        raise RuntimeError("MySQLDocumentStore does not store chunks; use CompositeDocumentStore")
-
-    async def delete_chunks(self, document_id: str) -> None:
-        raise RuntimeError("MySQLDocumentStore does not store chunks; use CompositeDocumentStore")
 
     @staticmethod
     def _document_from_row(row: Any) -> Document:
@@ -170,14 +159,14 @@ class MySQLDocumentStore(DocumentStore):
         }
 
 
-class CompositeDocumentStore(DocumentStore):
-    """把完整 Document 写入 MySQL，把 Chunk 和向量写入 Milvus。"""
+class CompositeDocumentStore(IndexStore):
+    """把完整 Document 写入 MySQL，把 Chunk 分发给向量和关键词索引。"""
 
     def __init__(
         self,
         document_store: MySQLDocumentStore,
-        chunk_store: Any,
-        keyword_store: Any | None = None,
+        chunk_store: ChunkStore,
+        keyword_store: ChunkStore | None = None,
     ) -> None:
         self.document_store = document_store
         self.chunk_store = chunk_store
@@ -215,5 +204,6 @@ class CompositeDocumentStore(DocumentStore):
 
     async def close(self) -> None:
         await self.document_store.close()
+        await self.chunk_store.close()
         if self.keyword_store is not None:
             await self.keyword_store.close()

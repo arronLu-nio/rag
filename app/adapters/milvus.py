@@ -5,10 +5,10 @@ import json
 from typing import Any
 
 from app.domain import ACL, Chunk, Document, DocumentStatus, RetrievalResult
-from app.ports.contracts import DocumentStore, EmbeddingModel, Retriever
+from app.ports.contracts import EmbeddingModel, IndexStore, Retriever
 
 
-class MilvusDocumentStore(DocumentStore):
+class MilvusDocumentStore(IndexStore):
     """使用 Milvus 持久化文档元数据和 chunk 向量。
 
     `documents` collection 保存文档状态和元数据；`chunks` collection 保存可检索文本、
@@ -45,6 +45,14 @@ class MilvusDocumentStore(DocumentStore):
                 return
             await asyncio.to_thread(self._initialize_sync)
             self._initialized = True
+
+    async def close(self) -> None:
+        """关闭 Milvus 客户端连接。"""
+
+        if self._client is not None and hasattr(self._client, "close"):
+            await asyncio.to_thread(self._client.close)
+        self._client = None
+        self._initialized = False
 
     async def save_document(self, document: Document) -> Document:
         await self.initialize()

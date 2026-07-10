@@ -7,10 +7,10 @@ from opensearchpy import OpenSearch
 from opensearchpy.helpers import bulk
 
 from app.domain import ACL, Chunk, RetrievalResult
-from app.ports.contracts import Retriever
+from app.ports.contracts import ChunkStore, Retriever
 
 
-class OpenSearchChunkStore:
+class OpenSearchChunkStore(ChunkStore):
     """把 Chunk 文本、来源和 ACL 写入 OpenSearch，供 BM25 关键词检索。"""
 
     def __init__(self, url: str, index_name: str, client: Any | None = None) -> None:
@@ -247,6 +247,11 @@ class HybridRetriever(Retriever):
                 query, tenant_id, space_id, user_subjects, candidate_top_k
             ),
         )
+        # RRF 会覆盖 RetrievalResult.score；保留 Milvus 原始分数，供问答拒答阈值使用。
+        vector_results = [
+            result.model_copy(update={"vector_score": result.score})
+            for result in vector_results
+        ]
         return self._rrf([vector_results, keyword_results], top_k)
 
     def _rrf(
@@ -265,7 +270,12 @@ class HybridRetriever(Retriever):
                     fused[result.chunk.id] = (current[0], current[1] + score)
 
         merged = [
-            RetrievalResult(chunk=result.chunk, score=score, source="hybrid-rrf")
+            RetrievalResult(
+                chunk=result.chunk,
+                score=score,
+                source="hybrid-rrf",
+                vector_score=result.vector_score,
+            )
             for result, score in fused.values()
         ]
         merged.sort(key=lambda item: item.score, reverse=True)

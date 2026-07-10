@@ -61,11 +61,20 @@ def build_qa_graph(
         )
         if not results:
             return {**state, "retrieved": [], "refusal_reason": "no_authorized_context"}
-        # RRF 融合分数不等同于余弦相似度，因此混合召回改由 rerank 阈值判断。
-        if results[0].source != "hybrid-rrf" and results[0].score < min_retrieval_score:
+        vector_scores = [
+            result.vector_score
+            for result in results
+            if result.vector_score is not None
+        ]
+        if not vector_scores and all(result.source != "hybrid-rrf" for result in results):
+            # 兼容直接使用 MilvusRetriever 或测试替身的场景。
+            vector_scores = [result.score for result in results]
+        top_vector_score = max(vector_scores, default=0.0)
+        if top_vector_score < min_retrieval_score:
             print(
                 "=============召回拒答==============\n"
-                f"top_score={results[0].score:.4f} threshold={min_retrieval_score:.4f}\n"
+                f"top_milvus_score={top_vector_score:.4f} "
+                f"threshold={min_retrieval_score:.4f}\n"
                 "reason=low_retrieval_score\n"
                 "================================="
             )

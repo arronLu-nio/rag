@@ -3,7 +3,7 @@ from typing import TypedDict
 from langgraph.graph import END, StateGraph
 
 from app.domain import Chunk, Document, DocumentStatus
-from app.ports.contracts import DocumentStore, EmbeddingModel
+from app.ports.contracts import EmbeddingModel, IndexStore
 
 
 class IndexingState(TypedDict, total=False):
@@ -15,7 +15,7 @@ class IndexingState(TypedDict, total=False):
     error: str | None
 
 
-def build_indexing_graph(store: DocumentStore, embedding_model: EmbeddingModel):
+def build_indexing_graph(store: IndexStore, embedding_model: EmbeddingModel):
     """构建文档入库图。
 
     流程：接收文档 -> 解析切分 -> 生成 embedding -> 持久化索引 -> 发布版本。
