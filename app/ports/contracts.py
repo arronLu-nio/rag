@@ -4,13 +4,37 @@ from app.domain import Chunk, Document, QAAnswer, RetrievalResult
 
 
 class DocumentStore(ABC):
-    """文档和 chunk 的存储端口。
+    """完整 Document 的存储端口。"""
 
-    当前实现是内存版；以后可以替换成 PostgreSQL + Milvus + OpenSearch 的组合。
-    """
+    @abstractmethod
+    async def initialize(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def close(self) -> None:
+        raise NotImplementedError
 
     @abstractmethod
     async def save_document(self, document: Document) -> Document:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_document(self, document_id: str) -> Document | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_documents(self, tenant_id: str, space_id: str) -> list[Document]:
+        raise NotImplementedError
+
+class ChunkStore(ABC):
+    """Chunk 及其检索索引的存储端口。"""
+
+    @abstractmethod
+    async def initialize(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def close(self) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -18,8 +42,16 @@ class DocumentStore(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_document(self, document_id: str) -> Document | None:
+    async def replace_chunks(self, document_id: str, chunks: list[Chunk]) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def delete_chunks(self, document_id: str) -> None:
+        raise NotImplementedError
+
+
+class IndexStore(DocumentStore, ChunkStore):
+    """同时提供 Document 和 Chunk 能力的入库端口。"""
 
 
 class EmbeddingModel(ABC):

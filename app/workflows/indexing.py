@@ -3,7 +3,7 @@ from typing import TypedDict
 from langgraph.graph import END, StateGraph
 
 from app.domain import Chunk, Document, DocumentStatus
-from app.ports.contracts import DocumentStore, EmbeddingModel
+from app.ports.contracts import EmbeddingModel, IndexStore
 
 
 class IndexingState(TypedDict, total=False):
@@ -11,10 +11,11 @@ class IndexingState(TypedDict, total=False):
 
     document: Document
     chunks: list[Chunk]
+    replace_existing: bool
     error: str | None
 
 
-def build_indexing_graph(store: DocumentStore, embedding_model: EmbeddingModel):
+def build_indexing_graph(store: IndexStore, embedding_model: EmbeddingModel):
     """构建文档入库图。
 
     流程：接收文档 -> 解析切分 -> 生成 embedding -> 持久化索引 -> 发布版本。
@@ -63,12 +64,15 @@ def build_indexing_graph(store: DocumentStore, embedding_model: EmbeddingModel):
     async def persist_indexes(state: IndexingState) -> IndexingState:
         """保存 chunk 和索引数据。
 
-        当前写入内存；生产环境这里会同时写 Milvus、OpenSearch 和 PostgreSQL。
+        当前写入 Milvus：文档状态写入 documents collection，chunk 和向量写入 chunks collection。
         """
 
         document = state["document"].model_copy(update={"status": DocumentStatus.INDEXED})
         await store.save_document(document)
-        await store.save_chunks(state["chunks"])
+        if state.get("replace_existing"):
+            await store.replace_chunks(document.id, state["chunks"])
+        else:
+            await store.save_chunks(state["chunks"])
         return {**state, "document": document}
 
     async def publish_version(state: IndexingState) -> IndexingState:

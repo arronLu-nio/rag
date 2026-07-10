@@ -149,6 +149,8 @@ activemq-data/
 
 # Environments
 .env
+.vscode/
+data/uploads/
 .envrc
 .venv
 env/

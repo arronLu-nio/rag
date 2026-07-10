@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>企业知识库</title>
+    <style>
+      :root {
+        --ink: #17241f;
+        --muted: #68766f;
+        --line: #dce4df;
+        --canvas: #f4f7f5;
+        --surface: #ffffff;
+        --sidebar: #112d34;
+        --sidebar-muted: #a8bec0;
+        --accent: #08756f;
+        --accent-hover: #075e5a;
+        --accent-soft: #e5f3ef;
+        --blue-soft: #edf5f8;
+        --danger: #b42318;
+        --radius: 8px;
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--ink);
+        background: var(--canvas);
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; }
+      button, input, textarea { font: inherit; }
+
+      .app-shell { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100vh; }
+      .sidebar {
+        background: var(--sidebar);
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 24px 14px 18px;
+        position: sticky;
+        top: 0;
+      }
+      .brand { padding: 0 10px 28px; }
+      .brand-mark { color: #8de0cf; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+      .brand h1 { font-size: 21px; font-weight: 680; margin: 8px 0 5px; }
+      .brand p { color: var(--sidebar-muted); font-size: 12px; line-height: 1.55; margin: 0; }
+      .nav-label { color: #7fa0a3; font-size: 11px; font-weight: 700; letter-spacing: .08em; margin: 0 10px 8px; }
+      .nav { display: grid; gap: 4px; }
+      .nav-button {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        color: #c5d6d6;
+        cursor: pointer;
+        display: flex;
+        font-size: 14px;
+        gap: 10px;
+        padding: 11px 12px;
+        text-align: left;
+        width: 100%;
+      }
+      .nav-button::before { background: #79999b; border-radius: 50%; content: ""; height: 7px; width: 7px; }
+      .nav-button:hover { background: #1b4148; color: #ffffff; }
+      .nav-button.active { background: #1e4c50; color: #ffffff; font-weight: 650; }
+      .nav-button.active::before { background: #83dfcb; }
+      .sidebar-footer { border-top: 1px solid #2a4b51; color: var(--sidebar-muted); font-size: 12px; line-height: 1.6; margin-top: auto; padding: 16px 10px 0; }
+      .connection { color: #9ee4d3; display: block; }
+
+      .content { min-width: 0; padding: 34px clamp(22px, 5vw, 72px) 56px; }
+      .content-inner { margin: 0 auto; max-width: 1260px; }
+      .page { display: none; }
+      .page.active { display: block; }
+      .page-header { align-items: end; display: flex; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+      .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .07em; margin: 0 0 8px; text-transform: uppercase; }
+      h2 { font-size: 26px; font-weight: 680; letter-spacing: 0; margin: 0; }
+      .page-description { color: var(--muted); font-size: 14px; line-height: 1.65; margin: 7px 0 0; }
+      .page-meta { color: var(--muted); font-size: 13px; text-align: right; white-space: nowrap; }
+
+      .workspace-grid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr) 290px; }
+      .ask-grid { display: grid; gap: 22px; grid-template-columns: minmax(330px, .78fr) minmax(0, 1.22fr); }
+      .surface { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+      .form-surface { padding: 22px; }
+      .side-note { background: var(--blue-soft); border: 1px solid #d7e7ed; border-radius: var(--radius); padding: 20px; }
+      .side-note h3 { font-size: 15px; margin: 0 0 10px; }
+      .side-note p, .side-note li { color: #4f676d; font-size: 13px; line-height: 1.65; }
+      .side-note p { margin: 0; }
+      .side-note ul { margin: 11px 0 0; padding-left: 18px; }
+
+      .form-heading { align-items: baseline; display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+      .form-heading h3 { font-size: 17px; margin: 0; }
+      .form-heading span { color: var(--muted); font-size: 12px; }
+      .fields { display: grid; gap: 15px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .field { display: grid; gap: 7px; }
+      .span-2 { grid-column: span 2; }
+      label { color: #405049; font-size: 13px; font-weight: 650; }
+      input, textarea {
+        background: #ffffff;
+        border: 1px solid #bfcac3;
+        border-radius: 6px;
+        color: var(--ink);
+        font-size: 14px;
+        padding: 10px 11px;
+        width: 100%;
+      }
+      input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #d9eeea; outline: 0; }
+      textarea { line-height: 1.62; min-height: 280px; resize: vertical; }
+      #query { min-height: 150px; }
+      .field-help { color: var(--muted); font-size: 12px; }
+      .file-import { background: #f7faf8; border: 1px dashed #a6bdb3; border-radius: 7px; margin-top: 18px; padding: 15px; }
+      .file-import-header { align-items: baseline; display: flex; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+      .file-import-header h4 { font-size: 14px; margin: 0; }
+      .file-import-header span { color: var(--muted); font-size: 12px; }
+      .file-row { align-items: end; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(160px, .55fr) auto; }
+      input[type="file"] { background: #ffffff; cursor: pointer; padding: 8px; }
+      .actions { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+      button { border: 0; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 650; padding: 10px 15px; }
+      button.primary { background: var(--accent); color: #ffffff; }
+      button.primary:hover { background: var(--accent-hover); }
+      button.secondary { background: #eef2ef; color: #35453c; }
+      button.secondary:hover { background: #e0e8e2; }
+      button.danger { background: #fff0ef; color: var(--danger); }
+      button.danger:hover { background: #fde0de; }
+      button:disabled { cursor: wait; opacity: .62; }
+      .status { color: var(--muted); font-size: 13px; }
+      .status.error { color: var(--danger); }
+      .status.success { color: #087443; }
+
+      .answer-surface { min-height: 390px; padding: 22px; }
+      .answer-empty { align-items: center; color: var(--muted); display: flex; font-size: 14px; line-height: 1.65; min-height: 340px; }
+      .answer { font-size: 15px; line-height: 1.75; white-space: pre-wrap; }
+      .citations { display: grid; gap: 9px; list-style: none; margin: 22px 0 0; padding: 0; }
+      .citation { background: #f2f7f8; border-left: 3px solid #4a91ad; color: #40535b; font-size: 13px; line-height: 1.6; padding: 10px 12px; }
+      .citation strong { color: #24546b; }
+      .trace { border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; margin-top: 18px; padding-top: 14px; }
+
+      .toolbar { align-items: end; display: flex; gap: 12px; margin-bottom: 16px; }
+      .toolbar .field { width: 190px; }
+      .toolbar .status { margin-left: auto; padding-bottom: 10px; }
+      .table-surface { overflow: hidden; }
+      .table-wrap { overflow-x: auto; }
+      table { border-collapse: collapse; min-width: 760px; width: 100%; }
+      th, td { border-bottom: 1px solid #e6ebe7; padding: 14px 16px; text-align: left; vertical-align: middle; }
+      th { background: #f7f9f8; color: #607067; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+      td { color: #34433b; font-size: 14px; }
+      tr:last-child td { border-bottom: 0; }
+      .doc-title { font-weight: 680; }
+      .doc-source { color: var(--muted); font-size: 12px; margin-top: 4px; }
+      .version { color: var(--muted); font-variant-numeric: tabular-nums; }
+      .status-tag { background: var(--accent-soft); border-radius: 999px; color: #17665d; display: inline-block; font-size: 12px; padding: 4px 8px; }
+      .row-actions { display: flex; gap: 8px; }
+      .row-actions button { font-size: 13px; padding: 7px 9px; }
+      .empty-row { color: var(--muted); padding: 38px; text-align: center; }
+
+      @media (max-width: 960px) {
+        .app-shell { display: block; }
+        .sidebar { height: auto; padding: 16px 18px; position: static; }
+        .brand { padding: 0 0 14px; }
+        .brand p, .nav-label, .sidebar-footer { display: none; }
+        .nav { display: flex; overflow-x: auto; }
+        .nav-button { flex: 0 0 auto; width: auto; }
+        .content { padding: 26px 20px 44px; }
+        .workspace-grid, .ask-grid { grid-template-columns: 1fr; }
+        .page-header { align-items: start; flex-direction: column; }
+        .page-meta { text-align: left; }
+      }
+      @media (max-width: 620px) {
+        .fields { grid-template-columns: 1fr; }
+        .span-2 { grid-column: auto; }
+        .toolbar { align-items: stretch; flex-direction: column; }
+        .toolbar .field { width: 100%; }
+        .toolbar .status { margin-left: 0; padding-bottom: 0; }
+        .file-row { grid-template-columns: 1fr; }
+        h2 { font-size: 23px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">Enterprise RAG</div>
+          <h1>企业知识库</h1>
+          <p>文本入库、权限检索、重排与带引用问答。</p>
+        </div>
+        <p class="nav-label">工作台</p>
+        <nav class="nav" aria-label="主导航">
+          <button class="nav-button active" data-view="ingest" type="button">知识录入</button>
+          <button class="nav-button" data-view="ask" type="button">知识问答</button>
+          <button class="nav-button" data-view="manage" type="button">文档管理</button>
+        </nav>
+        <div class="sidebar-footer"><span class="connection" id="connection">正在检查服务</span><span>MySQL + Milvus</span></div>
+      </aside>
+
+      <main class="content">
+        <div class="content-inner">
+          <section class="page active" id="ingest-page">
+            <header class="page-header">
+              <div><p class="eyebrow">Knowledge Ingestion</p><h2 id="ingest-title">录入知识</h2><p class="page-description">提交文本后自动切分、生成 embedding，并将全文存入 MySQL、检索向量写入 Milvus。</p></div>
+              <div class="page-meta">支持纯文本知识录入</div>
+            </header>
+            <div class="workspace-grid">
+              <form class="surface form-surface" id="ingest-form">
+                <input id="editing-document-id" type="hidden" />
+                <div class="form-heading"><h3>文档信息</h3><span id="editor-mode">新建文档</span></div>
+                <div class="fields">
+                  <div class="field"><label for="title">文档标题</label><input id="title" required value="IT 制度" /></div>
+                  <div class="field"><label for="source-uri">来源标识</label><input id="source-uri" value="manual://it" /></div>
+                  <div class="field span-2"><label for="content">文档正文</label><textarea id="content" required placeholder="输入需要存入知识库的文本内容"></textarea></div>
+                  <div class="field"><label for="ingest-tenant">租户</label><input id="ingest-tenant" required value="t1" /></div>
+                  <div class="field"><label for="ingest-space">知识空间</label><input id="ingest-space" required value="it" /></div>
+                  <div class="field span-2"><label for="allowed-subjects">可访问主体</label><input id="allowed-subjects" required value="user:bob" placeholder="多个主体用逗号分隔" /><span class="field-help">例如：user:bob, dept:it, role:employee</span></div>
+                </div>
+                <div class="file-import">
+                  <div class="file-import-header"><h4>从文件导入</h4><span>仅提取原生文字，不做 OCR</span></div>
+                  <div class="file-row">
+                    <div class="field"><label for="upload-file">文件</label><input id="upload-file" type="file" accept=".pdf,.docx,.md,.markdown" /></div>
+                    <div class="field"><label for="upload-title">文档标题（可选）</label><input id="upload-title" placeholder="默认使用文件名" /></div>
+                    <button class="secondary" id="upload-button" type="button">上传并入库</button>
+                  </div>
+                  <span class="status" id="upload-status"></span>
+                </div>
+                <div class="actions"><button class="primary" id="ingest-button" type="submit">存入知识库</button><button class="secondary" id="cancel-edit-button" type="button" hidden>取消编辑</button><span class="status" id="ingest-status"></span></div>
+              </form>
+              <aside class="side-note"><h3>入库流程</h3><p>当前录入内容会经过以下处理：</p><ul><li>清洗正文并按字符切分 Chunk</li><li>调用百炼 embedding 生成向量</li><li>全文、状态、版本写入 MySQL</li><li>Chunk、ACL、向量写入 Milvus</li></ul></aside>
+            </div>
+          </section>
+
+          <section class="page" id="ask-page">
+            <header class="page-header">
+              <div><p class="eyebrow">Grounded Answering</p><h2>知识问答</h2><p class="page-description">仅检索当前主体有权限访问的知识，并返回回答依据和流程追踪。</p></div>
+              <div class="page-meta">Milvus → Rerank → DeepSeek</div>
+            </header>
+            <div class="ask-grid">
+              <form class="surface form-surface" id="ask-form">
+                <div class="form-heading"><h3>发起问题</h3><span>默认返回 Top 8 候选</span></div>
+                <div class="field"><label for="query">问题</label><textarea id="query" required placeholder="例如：VPN 账号怎么申请？"></textarea></div>
+                <div class="fields" style="margin-top: 15px">
+                  <div class="field"><label for="ask-tenant">租户</label><input id="ask-tenant" required value="t1" /></div>
+                  <div class="field"><label for="ask-space">知识空间</label><input id="ask-space" required value="it" /></div>
+                  <div class="field span-2"><label for="user-subjects">当前用户主体</label><input id="user-subjects" required value="user:bob" placeholder="多个主体用逗号分隔" /></div>
+                </div>
+                <div class="actions"><button class="primary" id="ask-button" type="submit">开始提问</button><span class="status" id="ask-status"></span></div>
+              </form>
+              <div class="surface answer-surface" id="answer-box"><div class="answer-empty">提交问题后，这里会显示模型回答、引用来源和本次检索追踪信息。</div></div>
+            </div>
+          </section>
+
+          <section class="page" id="manage-page">
+            <header class="page-header">
+              <div><p class="eyebrow">Document Lifecycle</p><h2>文档管理</h2><p class="page-description">查看 MySQL 中的文档，编辑正文会重建对应的 Milvus Chunk 向量。</p></div>
+              <div class="page-meta">删除后保留 MySQL 审计记录</div>
+            </header>
+            <div class="toolbar"><div class="field"><label for="manage-tenant">租户</label><input id="manage-tenant" value="t1" /></div><div class="field"><label for="manage-space">知识空间</label><input id="manage-space" value="it" /></div><button class="secondary" id="load-documents-button" type="button">刷新列表</button><span class="status" id="documents-status"></span></div>
+            <div class="surface table-surface"><div class="table-wrap"><table><thead><tr><th>文档</th><th>版本</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="documents-body"><tr><td class="empty-row" colspan="5">正在加载文档。</td></tr></tbody></table></div></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const viewPages = { ingest: "ingest-page", ask: "ask-page", manage: "manage-page" };
+
+      function subjects(value) { return value.split(",").map((item) => item.trim()).filter(Boolean); }
+      function setStatus(id, message, type = "") { const element = $(id); element.textContent = message; element.className = `status ${type}`; }
+      function showView(view) {
+        Object.entries(viewPages).forEach(([name, pageId]) => { $(pageId).classList.toggle("active", name === view); });
+        document.querySelectorAll(".nav-button").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
+        if (view === "manage") loadDocuments();
+      }
+
+      async function request(url, method = "POST", payload) {
+        const response = await fetch(url, { method, headers: payload ? { "Content-Type": "application/json" } : undefined, body: payload ? JSON.stringify(payload) : undefined });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.detail || "请求失败");
+        return body;
+      }
+
+      function documentPayload() {
+        return { title: $("title").value.trim(), source_uri: $("source-uri").value.trim(), content: $("content").value.trim(), tenant_id: $("ingest-tenant").value.trim(), space_id: $("ingest-space").value.trim(), allowed_subjects: subjects($("allowed-subjects").value) };
+      }
+
+      function resetEditor() {
+        $("editing-document-id").value = "";
+        $("ingest-title").textContent = "录入知识";
+        $("editor-mode").textContent = "新建文档";
+        $("ingest-button").textContent = "存入知识库";
+        $("cancel-edit-button").hidden = true;
+        $("title").value = "IT 制度";
+        $("source-uri").value = "manual://it";
+        $("content").value = "";
+        $("ingest-tenant").value = $("manage-tenant").value || "t1";
+        $("ingest-space").value = $("manage-space").value || "it";
+        $("allowed-subjects").value = "user:bob";
+        setStatus("ingest-status", "");
+      }
+
+      async function loadDocuments() {
+        const tenantId = $("manage-tenant").value.trim();
+        const spaceId = $("manage-space").value.trim();
+        if (!tenantId || !spaceId) return;
+        setStatus("documents-status", "正在加载");
+        try {
+          const response = await fetch(`/documents?tenant_id=${encodeURIComponent(tenantId)}&space_id=${encodeURIComponent(spaceId)}`);
+          const documents = await response.json();
+          if (!response.ok) throw new Error(documents.detail || "加载失败");
+          renderDocuments(documents);
+          setStatus("documents-status", `共 ${documents.length} 篇`, "success");
+        } catch (error) { setStatus("documents-status", error.message, "error"); }
+      }
+
+      function renderDocuments(documents) {
+        const body = $("documents-body");
+        body.replaceChildren();
+        if (!documents.length) {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.className = "empty-row"; cell.colSpan = 5; cell.textContent = "当前空间还没有文档。";
+          row.append(cell); body.append(row); return;
+        }
+        documents.forEach((item) => {
+          const row = document.createElement("tr");
+          const documentCell = document.createElement("td");
+          const title = document.createElement("div"); title.className = "doc-title"; title.textContent = item.title;
+          const source = document.createElement("div"); source.className = "doc-source"; source.textContent = item.source_uri;
+          documentCell.append(title, source);
+          const version = document.createElement("td"); version.className = "version"; version.textContent = `v${item.version}`;
+          const status = document.createElement("td"); const tag = document.createElement("span"); tag.className = "status-tag"; tag.textContent = item.status; status.append(tag);
+          const createdAt = document.createElement("td"); createdAt.textContent = new Date(item.created_at).toLocaleString();
+          const actions = document.createElement("td"); actions.className = "row-actions";
+          const edit = document.createElement("button"); edit.className = "secondary"; edit.textContent = "编辑"; edit.addEventListener("click", () => editDocument(item.document_id));
+          const remove = document.createElement("button"); remove.className = "danger"; remove.textContent = "删除"; remove.addEventListener("click", () => deleteDocument(item.document_id, item.title));
+          actions.append(edit, remove); row.append(documentCell, version, status, createdAt, actions); body.append(row);
+        });
+      }
+
+      async function editDocument(documentId) {
+        const tenantId = $("manage-tenant").value.trim(); const spaceId = $("manage-space").value.trim();
+        try {
+          const response = await fetch(`/documents/${encodeURIComponent(documentId)}?tenant_id=${encodeURIComponent(tenantId)}&space_id=${encodeURIComponent(spaceId)}`);
+          const item = await response.json(); if (!response.ok) throw new Error(item.detail || "读取文档失败");
+          $("editing-document-id").value = item.document_id; $("title").value = item.title; $("source-uri").value = item.source_uri; $("content").value = item.content;
+          $("ingest-tenant").value = item.tenant_id; $("ingest-space").value = item.space_id; $("allowed-subjects").value = item.allowed_subjects.join(", ");
+          $("ingest-title").textContent = "编辑文档"; $("editor-mode").textContent = `当前版本 v${item.version}`; $("ingest-button").textContent = "更新文档"; $("cancel-edit-button").hidden = false;
+          showView("ingest"); window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch (error) { setStatus("documents-status", error.message, "error"); }
+      }
+
+      async function deleteDocument(documentId, title) {
+        if (!window.confirm(`确认删除“${title}”吗？这会删除 Milvus 中的全部向量。`)) return;
+        const tenantId = $("manage-tenant").value.trim(); const spaceId = $("manage-space").value.trim();
+        try {
+          await request(`/documents/${encodeURIComponent(documentId)}?tenant_id=${encodeURIComponent(tenantId)}&space_id=${encodeURIComponent(spaceId)}`, "DELETE");
+          if ($("editing-document-id").value === documentId) resetEditor();
+          await loadDocuments(); setStatus("documents-status", "文档已删除", "success");
+        } catch (error) { setStatus("documents-status", error.message, "error"); }
+      }
+
+      function renderAnswer(answer) {
+        const box = $("answer-box"); box.replaceChildren();
+        const answerText = document.createElement("div"); answerText.className = "answer"; answerText.textContent = answer.answer; box.append(answerText);
+        if (answer.citations.length) {
+          const citations = document.createElement("ul"); citations.className = "citations";
+          answer.citations.forEach((citation, index) => { const item = document.createElement("li"); item.className = "citation"; const title = document.createElement("strong"); title.textContent = `[${index + 1}] ${citation.title}`; item.append(title, document.createElement("br"), document.createTextNode(citation.quote)); citations.append(item); });
+          box.append(citations);
+        }
+        const trace = document.createElement("div"); trace.className = "trace"; trace.textContent = `模型：${answer.trace.used_model} ｜ 召回：${answer.trace.retrieval_count} ｜ 重排后：${answer.trace.reranked_count} ｜ 置信度：${answer.confidence.toFixed(2)}`; box.append(trace);
+      }
+
+      $("ingest-form").addEventListener("submit", async (event) => {
+        event.preventDefault(); const button = $("ingest-button"); button.disabled = true; setStatus("ingest-status", "正在处理文本并写入索引");
+        try {
+          const documentId = $("editing-document-id").value;
+          const result = await request(documentId ? `/documents/${encodeURIComponent(documentId)}` : "/documents/ingest", documentId ? "PUT" : "POST", documentPayload());
+          setStatus("ingest-status", `${documentId ? "已更新" : "已入库"}：${result.chunk_count} 个 Chunk，状态 ${result.status}`, "success");
+          $("ask-tenant").value = $("ingest-tenant").value; $("ask-space").value = $("ingest-space").value; $("user-subjects").value = $("allowed-subjects").value; $("manage-tenant").value = $("ingest-tenant").value; $("manage-space").value = $("ingest-space").value;
+          await loadDocuments(); if (documentId) resetEditor();
+        } catch (error) { setStatus("ingest-status", error.message, "error"); } finally { button.disabled = false; }
+      });
+
+      $("upload-button").addEventListener("click", async () => {
+        const file = $("upload-file").files[0];
+        if (!file) { setStatus("upload-status", "请选择 PDF、DOCX 或 Markdown 文件", "error"); return; }
+        const button = $("upload-button"); button.disabled = true; setStatus("upload-status", "正在提取文字并写入索引");
+        try {
+          const data = new FormData();
+          data.append("file", file); data.append("tenant_id", $("ingest-tenant").value.trim()); data.append("space_id", $("ingest-space").value.trim()); data.append("allowed_subjects", $("allowed-subjects").value.trim());
+          if ($("upload-title").value.trim()) data.append("title", $("upload-title").value.trim());
+          const response = await fetch("/documents/upload", { method: "POST", body: data }); const result = await response.json();
+          if (!response.ok) throw new Error(result.detail || "上传失败");
+          setStatus("upload-status", `已入库：${result.chunk_count} 个 Chunk，状态 ${result.status}`, "success");
+          $("manage-tenant").value = $("ingest-tenant").value; $("manage-space").value = $("ingest-space").value; $("upload-file").value = ""; $("upload-title").value = "";
+          await loadDocuments();
+        } catch (error) { setStatus("upload-status", error.message, "error"); } finally { button.disabled = false; }
+      });
+
+      $("ask-form").addEventListener("submit", async (event) => {
+        event.preventDefault(); const button = $("ask-button"); button.disabled = true; setStatus("ask-status", "正在检索并生成回答");
+        try { const answer = await request("/qa/ask", "POST", { query: $("query").value.trim(), tenant_id: $("ask-tenant").value.trim(), space_id: $("ask-space").value.trim(), user_subjects: subjects($("user-subjects").value), top_k: 8 }); renderAnswer(answer); setStatus("ask-status", "回答已生成", "success"); } catch (error) { setStatus("ask-status", error.message, "error"); } finally { button.disabled = false; }
+      });
+
+      $("cancel-edit-button").addEventListener("click", resetEditor);
+      $("load-documents-button").addEventListener("click", loadDocuments);
+      document.querySelectorAll(".nav-button").forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
+      fetch("/health").then((response) => response.json()).then((health) => { $("connection").textContent = `服务正常 · ${health.environment}`; }).catch(() => { $("connection").textContent = "服务未连接"; });
+      loadDocuments();
+    </script>
+  </body>
+</html>

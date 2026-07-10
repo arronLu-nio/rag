@@ -4,26 +4,32 @@ version = "0.1.0"
 description = "Enterprise knowledge-base RAG scaffold with LangGraph orchestration."
 requires-python = ">=3.11"
 dependencies = [
+    "aiomysql",
     "fastapi",
+    "greenlet",
+    "httpx",
     "uvicorn[standard]",
     "langgraph",
     "langchain-core",
     "langchain-deepseek",
+    "openai",
+    "opensearch-py",
     "pydantic",
     "pydantic-settings",
+    "pymupdf",
+    "pymilvus",
     "python-multipart",
+    "python-docx",
+    "SQLAlchemy>=2.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "httpx",
     "pytest",
     "pytest-asyncio",
     "ruff",
 ]
 prod-connectors = [
-    "pymilvus",
-    "opensearch-py",
     "psycopg[binary]",
     "redis",
     "celery",

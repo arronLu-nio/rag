@@ -13,6 +13,7 @@ class DocumentStatus(StrEnum):
     PARSED = "parsed"
     INDEXED = "indexed"
     PUBLISHED = "published"
+    DELETED = "deleted"
     FAILED = "failed"
 
 
@@ -77,6 +78,7 @@ class RetrievalResult(BaseModel):
     chunk: Chunk
     score: float
     source: str
+    vector_score: float | None = None
     rerank_score: float | None = None
 
 
