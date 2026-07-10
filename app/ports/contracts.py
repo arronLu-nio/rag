@@ -21,6 +21,18 @@ class DocumentStore(ABC):
     async def get_document(self, document_id: str) -> Document | None:
         raise NotImplementedError
 
+    @abstractmethod
+    async def list_documents(self, tenant_id: str, space_id: str) -> list[Document]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def replace_chunks(self, document_id: str, chunks: list[Chunk]) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_chunks(self, document_id: str) -> None:
+        raise NotImplementedError
+
 
 class EmbeddingModel(ABC):
     """把文本转成向量的端口。

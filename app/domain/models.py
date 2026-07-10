@@ -13,6 +13,7 @@ class DocumentStatus(StrEnum):
     PARSED = "parsed"
     INDEXED = "indexed"
     PUBLISHED = "published"
+    DELETED = "deleted"
     FAILED = "failed"
 
 

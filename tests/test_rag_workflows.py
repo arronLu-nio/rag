@@ -1,21 +1,23 @@
 import pytest
 
-from app.adapters.in_memory import (
-    GroundedStubChatModel,
-    HashEmbeddingModel,
-    HybridInMemoryRetriever,
-    InMemoryDocumentStore,
-    SimpleReranker,
-)
+from app.adapters.local import GroundedStubChatModel, SimpleReranker
 from app.domain import ACL, Document, DocumentStatus
 from app.workflows import build_indexing_graph, build_qa_graph
+from tests.fakes import FakeDocumentStore, FakeEmbeddingModel, FakeRetriever
+
+
+class LowScoreReranker:
+    async def rerank(self, query, results):
+        for result in results:
+            result.rerank_score = 0.49
+        return results
 
 
 @pytest.fixture
 def rag_components():
-    store = InMemoryDocumentStore()
-    embedding_model = HashEmbeddingModel()
-    retriever = HybridInMemoryRetriever(store, embedding_model)
+    store = FakeDocumentStore()
+    embedding_model = FakeEmbeddingModel()
+    retriever = FakeRetriever(store, embedding_model)
     reranker = SimpleReranker()
     chat_model = GroundedStubChatModel()
     return store, build_indexing_graph(store, embedding_model), build_qa_graph(
@@ -96,6 +98,77 @@ async def test_qa_refuses_when_no_authorized_context(rag_components):
     assert answer.citations == []
     assert answer.confidence == 0.0
     assert answer.trace.refusal_reason == "no_authorized_context"
+
+
+async def test_qa_refuses_low_retrieval_score_without_citations():
+    store = FakeDocumentStore()
+    embedding_model = FakeEmbeddingModel()
+    retriever = FakeRetriever(store, embedding_model)
+    indexing_graph = build_indexing_graph(store, embedding_model)
+    qa_graph = build_qa_graph(
+        retriever,
+        SimpleReranker(),
+        GroundedStubChatModel(),
+        min_retrieval_score=10.0,
+    )
+    document = Document(
+        title="IT制度",
+        source_uri="manual://it",
+        content="VPN 账号申请需要直属主管审批。",
+        acl=ACL(tenant_id="t1", space_id="it", allowed_subjects={"user:bob"}),
+    )
+    await indexing_graph.ainvoke({"document": document})
+
+    result = await qa_graph.ainvoke(
+        {
+            "query": "VPN 怎么申请？",
+            "tenant_id": "t1",
+            "space_id": "it",
+            "user_subjects": {"user:bob"},
+            "top_k": 5,
+        }
+    )
+
+    answer = result["answer"]
+    assert answer.citations == []
+    assert answer.trace.refusal_reason == "low_retrieval_score"
+    assert answer.trace.used_model == "retrieval-guard"
+
+
+async def test_qa_refuses_low_rerank_score_without_calling_chat_model():
+    store = FakeDocumentStore()
+    embedding_model = FakeEmbeddingModel()
+    retriever = FakeRetriever(store, embedding_model)
+    indexing_graph = build_indexing_graph(store, embedding_model)
+    qa_graph = build_qa_graph(
+        retriever,
+        LowScoreReranker(),
+        GroundedStubChatModel(),
+        min_retrieval_score=0.2,
+        min_rerank_score=0.5,
+    )
+    document = Document(
+        title="IT制度",
+        source_uri="manual://it",
+        content="VPN 账号申请需要直属主管审批。",
+        acl=ACL(tenant_id="t1", space_id="it", allowed_subjects={"user:bob"}),
+    )
+    await indexing_graph.ainvoke({"document": document})
+
+    result = await qa_graph.ainvoke(
+        {
+            "query": "VPN 怎么申请？",
+            "tenant_id": "t1",
+            "space_id": "it",
+            "user_subjects": {"user:bob"},
+            "top_k": 5,
+        }
+    )
+
+    answer = result["answer"]
+    assert answer.citations == []
+    assert answer.trace.refusal_reason == "low_rerank_score"
+    assert answer.trace.used_model == "retrieval-guard"
 
 
 async def test_qa_trace_records_retrieval_and_model(rag_components):
